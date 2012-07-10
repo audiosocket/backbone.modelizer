@@ -10,6 +10,7 @@ Identity map
 ============
 
 Identity map wraps around all models. When instanciating a model such as:
+
     model = new Backbone.Model({id: 8})
 
 Additionaly, you can also do:
