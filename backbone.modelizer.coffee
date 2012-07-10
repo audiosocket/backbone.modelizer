@@ -47,28 +47,24 @@ class Backbone.Model extends Backbone.Model
       cached = Backbone.IdentityMap.retrieve @constructor, attributes.id
 
       if cached?
+        @modelize attributes
+
         cached.set attributes if _.keys(attributes).length > 1
 
         return cached
 
       Backbone.IdentityMap.store @constructor, attributes.id, this
 
-    super attributes
-
-  initialize: (attributes) ->
-    super
-
     @modelize attributes
+
+    super attributes
 
   # Like Backbone's normal `sync`, but run `modelize` after.
 
   sync: (method, model, options) ->
     success = options.success
     options.success = (attributes, status, xhr) =>
-      if attributes?
-        @modelize attributes, options, -> success attributes, status, xhr
-      else
-        success attributes, status, xhr
+      @modelize attributes, options, -> success attributes, status, xhr
 
     (this._sync || Backbone.sync).call this, method, model, options
 
@@ -91,7 +87,7 @@ class Backbone.Model extends Backbone.Model
   #  to the calling model in the collection, e.g.
   #  collection.foo = this
 
-  modelize: (attributes, options, success) =>
+  modelize: (attributes = {}, options, success) =>
     if _.isFunction @associations
       associations = @associations()
     else
@@ -108,14 +104,18 @@ class Backbone.Model extends Backbone.Model
     _.each associations, (association, name) =>
       if association.model?
         obj = attributes[name]
+        obj = obj.attributes if obj instanceof Backbone.Model
         obj = { id: obj } if _.isNumber obj
 
         @[name] = new association.model(obj)
 
         attributes[name] = @[name].id
       else
+        collection = attributes[name]
+        collection = collection.models if collection instanceof Backbone.Collection
+
         if @[name]?
-          @[name].reset attributes[name] if _.isArray(attributes[name])
+          @[name].reset collection if _.isArray(collection)
         else
           self = this
 
@@ -129,10 +129,10 @@ class Backbone.Model extends Backbone.Model
 
               super
 
-          @[name] = new constructor attributes[name]
+          @[name] = new constructor collection
 
-          if attributes[name]?
-            attributes[name] = _.compact _.pluck(attributes[name], "id")
+        if collection?
+          attributes[name] = _.compact _.pluck(collection, "id")
 
       cb()
 
