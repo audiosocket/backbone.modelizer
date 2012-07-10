@@ -35,7 +35,7 @@
       return map[id] = obj;
     },
     gc: function() {
-      return _.each(this.kinds, function(map) {
+      return _.each(this.maps, function(map) {
         return _.each(map, function(obj, key) {
           if (obj.refCount === 0) {
             return delete map[key];

@@ -35,7 +35,7 @@ Backbone.IdentityMap =
   # Garbage-collect: delete all instances with refCount == 0
 
   gc: ->
-    _.each @kinds, (map) ->
+    _.each @maps, (map) ->
       _.each map, (obj, key) ->
         delete map[key] if obj.refCount == 0
 
