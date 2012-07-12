@@ -107,7 +107,11 @@ class Backbone.Model extends Backbone.Model
         obj = obj.attributes if obj instanceof Backbone.Model
         obj = { id: obj } if _.isNumber obj
 
-        @[name] = new association.model(obj)
+        if @[name]? and @[name].id == obj?.id
+          @[name].set obj
+        else
+          if not @[name]? or obj?.id?
+            @[name] = new association.model(obj)
 
         attributes[name] = @[name].id
       else
@@ -167,3 +171,15 @@ class Backbone.Model extends Backbone.Model
     sep = if base.charAt(base.length - 1) == "/" then "" else "/"
 
     "#{base}#{sep}#{encodeURIComponent(@id)}"
+
+  set: (key, value, options) ->
+    if _.isObject(key) || key == null
+      attributes = key
+      options    = value
+    else
+      attributes = {}
+      attributes[key] = value
+
+    @modelize attributes
+
+    super attributes, options

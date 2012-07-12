@@ -63,6 +63,7 @@
       if ((attributes != null ? attributes.id : void 0) != null) {
         cached = Backbone.IdentityMap.retrieve(this.constructor, attributes.id);
         if (cached != null) {
+          this.modelize(attributes);
           if (_.keys(attributes).length > 1) {
             cached.set(attributes);
           }
@@ -70,26 +71,18 @@
         }
         Backbone.IdentityMap.store(this.constructor, attributes.id, this);
       }
+      this.modelize(attributes);
       Model.__super__.constructor.call(this, attributes);
     }
-
-    Model.prototype.initialize = function(attributes) {
-      Model.__super__.initialize.apply(this, arguments);
-      return this.modelize(attributes);
-    };
 
     Model.prototype.sync = function(method, model, options) {
       var success,
         _this = this;
       success = options.success;
       options.success = function(attributes, status, xhr) {
-        if (attributes != null) {
-          return _this.modelize(attributes, options, function() {
-            return success(attributes, status, xhr);
-          });
-        } else {
+        return _this.modelize(attributes, options, function() {
           return success(attributes, status, xhr);
-        }
+        });
       };
       return (this._sync || Backbone.sync).call(this, method, model, options);
     };
@@ -97,6 +90,9 @@
     Model.prototype.modelize = function(attributes, options, success) {
       var associations, cb,
         _this = this;
+      if (attributes == null) {
+        attributes = {};
+      }
       if (_.isFunction(this.associations)) {
         associations = this.associations();
       } else {
@@ -108,20 +104,33 @@
       }
       cb = _.after(_.size(associations), success);
       return _.each(associations, function(association, name) {
-        var constructor, obj, self;
+        var collection, constructor, obj, self;
         if (association.model != null) {
           obj = attributes[name];
+          if (obj instanceof Backbone.Model) {
+            obj = obj.attributes;
+          }
           if (_.isNumber(obj)) {
             obj = {
               id: obj
             };
           }
-          _this[name] = new association.model(obj);
+          if ((_this[name] != null) && _this[name].id === (obj != null ? obj.id : void 0)) {
+            _this[name].set(obj);
+          } else {
+            if (!(_this[name] != null) || ((obj != null ? obj.id : void 0) != null)) {
+              _this[name] = new association.model(obj);
+            }
+          }
           attributes[name] = _this[name].id;
         } else {
+          collection = attributes[name];
+          if (collection instanceof Backbone.Collection) {
+            collection = collection.models;
+          }
           if (_this[name] != null) {
-            if (_.isArray(attributes[name])) {
-              _this[name].reset(attributes[name]);
+            if (_.isArray(collection)) {
+              _this[name].reset(collection);
             }
           } else {
             self = _this;
@@ -144,10 +153,10 @@
               return constructor;
 
             })(association.collection);
-            _this[name] = new constructor(attributes[name]);
-            if (attributes[name] != null) {
-              attributes[name] = _.compact(_.pluck(attributes[name], "id"));
-            }
+            _this[name] = new constructor(collection);
+          }
+          if (collection != null) {
+            attributes[name] = _.compact(_.pluck(collection, "id"));
           }
         }
         return cb();
@@ -177,6 +186,19 @@
       }
       sep = base.charAt(base.length - 1) === "/" ? "" : "/";
       return "" + base + sep + (encodeURIComponent(this.id));
+    };
+
+    Model.prototype.set = function(key, value, options) {
+      var attributes;
+      if (_.isObject(key) || key === null) {
+        attributes = key;
+        options = value;
+      } else {
+        attributes = {};
+        attributes[key] = value;
+      }
+      this.modelize(attributes);
+      return Model.__super__.set.call(this, attributes, options);
     };
 
     return Model;
