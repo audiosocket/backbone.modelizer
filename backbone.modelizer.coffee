@@ -47,28 +47,15 @@ class Backbone.Model extends Backbone.Model
       cached = Backbone.IdentityMap.retrieve @constructor, attributes.id
 
       if cached?
-        @modelize attributes
-
         cached.set attributes if _.keys(attributes).length > 1
 
         return cached
 
       Backbone.IdentityMap.store @constructor, attributes.id, this
 
-    @modelize attributes
-
     super attributes
 
-  # Like Backbone's normal `sync`, but run `modelize` after.
-
-  sync: (method, model, options) ->
-    success = options.success
-    options.success = (attributes, status, xhr) =>
-      @modelize attributes, options, -> success attributes, status, xhr
-
-    (this._sync || Backbone.sync).call this, method, model, options
-
-  # Attributes, meet associations. `modelize` is called after `sync`
+  # Attributes, meet associations. `modelize` is called during `set`
   # and handles all the `associations` declared for this class.
 
   # Subclasses can define associations:
@@ -87,7 +74,7 @@ class Backbone.Model extends Backbone.Model
   #  to the calling model in the collection, e.g.
   #  collection.foo = this
 
-  modelize: (attributes = {}, options, success) =>
+  modelize: (attributes = {}) =>
     if _.isFunction @associations
       associations = @associations()
     else
@@ -136,7 +123,10 @@ class Backbone.Model extends Backbone.Model
           @[name] = new constructor collection
 
         if collection?
-          attributes[name] = _.compact _.pluck(collection, "id")
+          attributes[name] = _.compact _.map(collection, (el) ->
+            return el if _.isNumber el
+
+            el.id)
 
       cb()
 

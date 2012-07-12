@@ -63,7 +63,6 @@
       if ((attributes != null ? attributes.id : void 0) != null) {
         cached = Backbone.IdentityMap.retrieve(this.constructor, attributes.id);
         if (cached != null) {
-          this.modelize(attributes);
           if (_.keys(attributes).length > 1) {
             cached.set(attributes);
           }
@@ -71,24 +70,11 @@
         }
         Backbone.IdentityMap.store(this.constructor, attributes.id, this);
       }
-      this.modelize(attributes);
       Model.__super__.constructor.call(this, attributes);
     }
 
-    Model.prototype.sync = function(method, model, options) {
-      var success,
-        _this = this;
-      success = options.success;
-      options.success = function(attributes, status, xhr) {
-        return _this.modelize(attributes, options, function() {
-          return success(attributes, status, xhr);
-        });
-      };
-      return (this._sync || Backbone.sync).call(this, method, model, options);
-    };
-
-    Model.prototype.modelize = function(attributes, options, success) {
-      var associations, cb,
+    Model.prototype.modelize = function(attributes) {
+      var associations, cb, success,
         _this = this;
       if (attributes == null) {
         attributes = {};
@@ -156,7 +142,12 @@
             _this[name] = new constructor(collection);
           }
           if (collection != null) {
-            attributes[name] = _.compact(_.pluck(collection, "id"));
+            attributes[name] = _.compact(_.map(collection, function(el) {
+              if (_.isNumber(el)) {
+                return el;
+              }
+              return el.id;
+            }));
           }
         }
         return cb();
