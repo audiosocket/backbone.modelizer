@@ -1,3 +1,8 @@
+if require?
+  Backbone = require "backbone"
+else
+  Backbone = window.Backbone
+
 Backbone.IdentityMap =
   # Global map
   kinds: {}
