@@ -85,13 +85,7 @@ class Backbone.Model extends Backbone.Model
     else
       associations = @associations
 
-    success = success || ->
-
-    # _.after 0, fn actually executes fn immediatly and returns `undefined`
-    # but we may as well bail out right away..
-    return success() if _.isEmpty associations
-
-    cb = _.after _.size(associations), success
+    return if _.isEmpty associations
 
     _.each associations, (association, name) =>
       if association.model?
@@ -132,8 +126,6 @@ class Backbone.Model extends Backbone.Model
             return el if _.isNumber el
 
             el.id)
-
-      cb()
 
   # Views use refcounting to expire things in the identity map.
 

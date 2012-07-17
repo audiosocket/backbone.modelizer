@@ -81,7 +81,7 @@
     }
 
     Model.prototype.modelize = function(attributes) {
-      var associations, cb, success,
+      var associations,
         _this = this;
       if (attributes == null) {
         attributes = {};
@@ -91,11 +91,9 @@
       } else {
         associations = this.associations;
       }
-      success = success || function() {};
       if (_.isEmpty(associations)) {
-        return success();
+        return;
       }
-      cb = _.after(_.size(associations), success);
       return _.each(associations, function(association, name) {
         var collection, constructor, obj, self;
         if (association.model != null) {
@@ -115,7 +113,7 @@
               _this[name] = new association.model(obj);
             }
           }
-          attributes[name] = _this[name].id;
+          return attributes[name] = _this[name].id;
         } else {
           collection = attributes[name];
           if (collection instanceof Backbone.Collection) {
@@ -149,7 +147,7 @@
             _this[name] = new constructor(collection);
           }
           if (collection != null) {
-            attributes[name] = _.compact(_.map(collection, function(el) {
+            return attributes[name] = _.compact(_.map(collection, function(el) {
               if (_.isNumber(el)) {
                 return el;
               }
@@ -157,7 +155,6 @@
             }));
           }
         }
-        return cb();
       });
     };
 
