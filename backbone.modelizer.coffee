@@ -48,7 +48,7 @@ Backbone.IdentityMap =
 
 class Backbone.Model extends Backbone.Model
   constructor: (attributes) ->
-    attributes = { id: attributes } if _.isNumber attributes
+    attributes = { id: attributes } if not _.isObject(attributes)
 
     if attributes?.id?
       cached = Backbone.IdentityMap.retrieve @constructor, attributes.id
@@ -93,14 +93,8 @@ class Backbone.Model extends Backbone.Model
       if association.model?
         obj = attributes[name]
         obj = obj.attributes if obj instanceof Backbone.Model
-        obj = { id: obj } if _.isNumber obj
 
-        if @[name]? and @[name].id == obj?.id
-          @[name].set obj
-        else
-          if not @[name]? or obj?.id?
-            @[name] = new association.model(obj)
-
+        @[name] = new association.model(obj)
         attributes[name] = @[name].id
       else
         collection = attributes[name]
@@ -125,7 +119,7 @@ class Backbone.Model extends Backbone.Model
 
         if collection?
           attributes[name] = _.compact _.map(collection, (el) ->
-            return el if _.isNumber el
+            return el if not _.isObject(el)
 
             el.id)
 

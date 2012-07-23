@@ -64,7 +64,7 @@
       this.modelize = __bind(this.modelize, this);
 
       var cached;
-      if (_.isNumber(attributes)) {
+      if (!_.isObject(attributes)) {
         attributes = {
           id: attributes
         };
@@ -103,18 +103,7 @@
           if (obj instanceof Backbone.Model) {
             obj = obj.attributes;
           }
-          if (_.isNumber(obj)) {
-            obj = {
-              id: obj
-            };
-          }
-          if ((_this[name] != null) && _this[name].id === (obj != null ? obj.id : void 0)) {
-            _this[name].set(obj);
-          } else {
-            if (!(_this[name] != null) || ((obj != null ? obj.id : void 0) != null)) {
-              _this[name] = new association.model(obj);
-            }
-          }
+          _this[name] = new association.model(obj);
           return attributes[name] = _this[name].id;
         } else {
           collection = attributes[name];
@@ -150,7 +139,7 @@
           }
           if (collection != null) {
             return attributes[name] = _.compact(_.map(collection, function(el) {
-              if (_.isNumber(el)) {
+              if (!_.isObject(el)) {
                 return el;
               }
               return el.id;
