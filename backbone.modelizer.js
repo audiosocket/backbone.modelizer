@@ -103,6 +103,9 @@
           if (obj instanceof Backbone.Model) {
             obj = obj.attributes;
           }
+          if (obj == null) {
+            return;
+          }
           _this[name] = new association.model(obj);
           return attributes[name] = _this[name].id;
         } else {

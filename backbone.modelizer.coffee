@@ -94,6 +94,8 @@ class Backbone.Model extends Backbone.Model
         obj = attributes[name]
         obj = obj.attributes if obj instanceof Backbone.Model
 
+        return unless obj?
+
         @[name] = new association.model(obj)
         attributes[name] = @[name].id
       else
