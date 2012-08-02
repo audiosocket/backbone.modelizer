@@ -131,15 +131,22 @@ class Backbone.Model extends Backbone.Model
 
   # Increase this model's refCount. Returns `this`.
 
-  retain: ->
+  retain: (obj) ->
     ++@refCount
+
+    if obj?
+      @references ||= []
+      @references.push obj
 
     this
 
   # Decrease this model's refCount.
 
-  release: ->
+  release: (obj) ->
     --@refCount
+
+    if obj?
+      @references = _.without @references, obj
 
     this
 

@@ -154,13 +154,20 @@
 
     Model.prototype.refCount = 0;
 
-    Model.prototype.retain = function() {
+    Model.prototype.retain = function(obj) {
       ++this.refCount;
+      if (obj != null) {
+        this.references || (this.references = []);
+        this.references.push(obj);
+      }
       return this;
     };
 
-    Model.prototype.release = function() {
+    Model.prototype.release = function(obj) {
       --this.refCount;
+      if (obj != null) {
+        this.references = _.without(this.references, obj);
+      }
       return this;
     };
 
